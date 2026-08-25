@@ -31,15 +31,15 @@
 
 **目的**: ビジネスルールと外部依存なしのインターフェースを定義
 
-- [ ] T3.1: Port 定義
+- [x] T3.1: Port 定義
   - `ports/embedding.port.ts` — `EmbeddingPort`
   - `ports/generation.port.ts` — `GenerationPort`
   - `ports/vector-store.port.ts` — `VectorStorePort`
   - `ports/document-loader.port.ts` — `DocumentLoaderPort`
-- [ ] T3.2: Entity 定義
+- [x] T3.2: Entity 定義
   - `entities/document.entity.ts` — `Document`
   - `entities/chunk.entity.ts` — `Chunk`
-- [ ] T3.3: ValueObject 定義
+- [x] T3.3: ValueObject 定義
   - `value-objects/search-result.vo.ts` — `SearchResult`
   - `value-objects/document-chunk.vo.ts` — `DocumentChunk`
 
