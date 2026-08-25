@@ -21,9 +21,9 @@
 
 **目的**: 全ワークスペースで共有する型・定数を定義
 
-- [ ] T2.1: `src/types/` — API リクエスト/レスポンス型、ドメイン共通型
-- [ ] T2.2: `src/constants/` — エラーコード、チャンク設定デフォルト値
-- [ ] T2.3: `package.json`, `tsconfig.json`（各 app から参照可能なビルド設定）
+- [x] T2.1: `src/types/` — API リクエスト/レスポンス型、ドメイン共通型
+- [x] T2.2: `src/constants/` — エラーコード、チャンク設定デフォルト値
+- [x] T2.3: `package.json`, `tsconfig.json`（各 app から参照可能なビルド設定）
 
 ---
 
