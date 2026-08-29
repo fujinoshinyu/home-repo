@@ -31,11 +31,13 @@
 
 **目的**: ビジネスルールと外部依存なしのインターフェースを定義
 
-- [x] T3.1: Port 定義
-  - `ports/embedding.port.ts` — `EmbeddingPort`
-  - `ports/generation.port.ts` — `GenerationPort`
-  - `ports/vector-store.port.ts` — `VectorStorePort`
-  - `ports/document-loader.port.ts` — `DocumentLoaderPort`
+- [x] T3.1: Port 定義 (CQRS 分離済み)
+  - `ports/commands/embedding.command.ts` — `EmbeddingCommand`
+  - `ports/commands/generation.command.ts` — `GenerationCommand`
+  - `ports/commands/vector-store.command.ts` — `VectorStoreCommand`
+  - `ports/commands/document.command.ts` — `DocumentCommand`
+  - `ports/queries/vector-store.query.ts` — `VectorStoreQuery`
+  - `ports/queries/document.query.ts` — `DocumentQuery`
 - [x] T3.2: Entity 定義
   - `entities/document.entity.ts` — `Document`
   - `entities/chunk.entity.ts` — `Chunk`
@@ -49,15 +51,15 @@
 
 **目的**: Domain の Port を実装するアダプタ群
 
-- [ ] T4.1: Ollama 設定 (`config/ollama.config.ts`) — URL, モデル名を env から読み込み
-- [ ] T4.2: `OllamaEmbeddingAdapter` — `/api/embeddings` 呼び出し
-- [ ] T4.3: `OllamaGenerationAdapter` — `/api/chat` 呼び出し（ストリーミング対応）
-- [ ] T4.4: LanceDB 設定 (`config/lancedb.config.ts`) — DB パス
-- [ ] T4.5: `LanceVectorStoreAdapter` — upsert / search / delete
-- [ ] T4.6: Document Loaders
+- [x] T4.1: Ollama 設定 (`config/ollama.config.ts`) — URL, モデル名を env から読み込み
+- [x] T4.2: `OllamaEmbeddingAdapter` — `/api/embeddings` 呼び出し
+- [x] T4.3: `OllamaGenerationAdapter` — `/api/chat` 呼び出し（ストリーミング対応）
+- [x] T4.4: LanceDB 設定 (`config/lancedb.config.ts`) — DB パス
+- [x] T4.5: `LanceVectorStoreCommandAdapter` (upsert/delete) + `LanceVectorStoreQueryAdapter` (search)
+- [x] T4.6: Document Loaders
   - `loaders/markdown.loader.ts` — heading 単位チャンク分割
   - `loaders/pdf.loader.ts` — ページ/段落単位チャンク分割
-- [ ] T4.7: Infrastructure モジュール (`infrastructure.module.ts`) — DI バインディング
+- [x] T4.7: Infrastructure モジュール (`infrastructure.module.ts`) — DI バインディング
 
 ---
 
