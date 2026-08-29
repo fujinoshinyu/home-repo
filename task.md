@@ -95,9 +95,9 @@
 
 **目的**: NestJS アプリのエントリポイントとモジュール統合
 
-- [ ] T7.1: `app.module.ts` — Infrastructure / Application / Presentation モジュール統合
-- [ ] T7.2: `main.ts` — アプリ起動、CORS、Swagger UI 有効化 (`/api/docs`)、グローバルパイプ
-- [ ] T7.3: `Dockerfile` 作成
+- [x] T7.1: `app.module.ts` — ConfigModule + PresentationModule 統合
+- [x] T7.2: `main.ts` — CORS, Swagger UI (`/api/docs`), ValidationPipe, グローバルパイプ
+- [x] T7.3: `Dockerfile` 作成
 
 ---
 
