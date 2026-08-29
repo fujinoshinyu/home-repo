@@ -67,9 +67,9 @@
 
 **目的**: ユースケースのオーケストレーション
 
-- [ ] T5.1: `RagService` — query（同期）, stream（AsyncGenerator）
-- [ ] T5.2: `DocumentService` — upload, list, getById, delete, getChunks
-- [ ] T5.3: Application モジュール (`application.module.ts`)
+- [x] T5.1: `RagService` — query（同期）, stream（AsyncGenerator）
+- [x] T5.2: `DocumentService` — upload, list, getById, delete, getChunks
+- [x] T5.3: Application モジュール (`application.module.ts`)
 
 ---
 
