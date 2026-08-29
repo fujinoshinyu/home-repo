@@ -118,19 +118,18 @@
 
 **目的**: Next.js App Router で UI を構築
 
-- [ ] T9.1: Next.js 初期セットアップ (`create-next-app` or 手動)
-- [ ] T9.2: API Client Factory (`lib/api/factory.ts`)
-  - `createJsonClient` — GET / POST / PUT / DELETE
+- [x] T9.1: Next.js 初期セットアップ
+- [x] T9.2: API Client Factory (`lib/api/factory.ts`)
+  - `createJsonClient` — GET / POST / POST stream / PUT / DELETE
   - `createBinaryClient` — upload / download
-  - `postStream` — fetch ReadableStream (NDJSON)
-- [ ] T9.3: Chat Feature
+- [x] T9.3: Chat Feature
   - `features/chat/endpoints/chat-api.ts` — queryRag, streamRag
   - `app/chat/page.tsx` — 対話 UI（ストリーミング表示対応）
-- [ ] T9.4: Documents Feature
-  - `features/documents/endpoints/document-api.ts` — upload, list, download, delete, getChunks
+- [x] T9.4: Documents Feature
+  - `features/documents/endpoints/document-api.ts` — upload, list, delete
   - `app/documents/page.tsx` — ドキュメント管理 UI
-- [ ] T9.5: Layout (`app/layout.tsx`, `app/page.tsx`)
-- [ ] T9.6: `Dockerfile` 作成
+- [x] T9.5: Layout (`app/layout.tsx`, `app/page.tsx`)
+- [x] T9.6: `Dockerfile` 作成
 
 ---
 
