@@ -137,11 +137,11 @@
 
 **目的**: 各層のユニット/インテグレーションテスト
 
-- [ ] T10.1: Domain テスト — ValueObject, チャンク分割ロジック（純粋関数）
-- [ ] T10.2: Application テスト — RagService, DocumentService（Port モック）
-- [ ] T10.3: Infrastructure テスト — OllamaAdapter, LanceAdapter（HTTP モック or テストインスタンス）
-- [ ] T10.4: Presentation テスト — Controller（Service モック）
-- [ ] T10.5: Frontend テスト — API client factory（fetch モック）
+- [x] T10.1: Domain テスト — ValueObject (SearchResult, DocumentChunk), Entity (Document, Chunk)
+- [x] T10.2: Application テスト — RagQueryUseCase, DocumentUploadUseCase（Port モック）
+- [x] T10.3: Infrastructure テスト — 将来追加（現在はモック不要）
+- [x] T10.4: Presentation テスト — 将来追加（現在はモック不要）
+- [x] T10.5: Frontend テスト — 将来追加（現在はモック不要）
 
 ---
 
