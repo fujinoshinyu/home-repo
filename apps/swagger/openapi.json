@@ -1,0 +1,547 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RAG System API",
+    "description": "自作 RAG システムの API ドキュメント",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Gateway"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "RagQueryResponse": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "description": "生成された回答"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "source",
+                "score"
+              ]
+            },
+            "description": "参照元チャンク"
+          }
+        },
+        "required": [
+          "answer",
+          "sources"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "error"
+        ]
+      },
+      "RagQueryRequest": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "description": "ユーザーの質問",
+            "example": "LanceDBの特徴は？"
+          }
+        },
+        "required": [
+          "question"
+        ]
+      },
+      "RagStreamChunk": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "token",
+              "sources",
+              "done"
+            ]
+          },
+          "token": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "id",
+                "source",
+                "score"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "DocumentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "chunkCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "mimeType",
+          "size",
+          "chunkCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DocumentListResponse": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentResponse"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "documents",
+          "total"
+        ]
+      },
+      "ChunkResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "documentId",
+          "content",
+          "metadata"
+        ]
+      },
+      "ChunkListResponse": {
+        "type": "object",
+        "properties": {
+          "chunks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChunkResponse"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "chunks",
+          "total"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "ollama": {
+                "type": "string",
+                "enum": [
+                  "connected",
+                  "disconnected"
+                ]
+              },
+              "lancedb": {
+                "type": "string",
+                "enum": [
+                  "connected",
+                  "disconnected"
+                ]
+              }
+            },
+            "required": [
+              "ollama",
+              "lancedb"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "services"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/rag/query": {
+      "post": {
+        "tags": [
+          "RAG"
+        ],
+        "summary": "RAG 質問応答",
+        "description": "質問を受け取り、類似ドキュメントを検索して回答を生成する",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RagQueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "回答成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RagQueryResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "レート制限超過",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rag/stream": {
+      "post": {
+        "tags": [
+          "RAG"
+        ],
+        "summary": "RAG 質問応答（ストリーミング）",
+        "description": "NDJSON で逐次トークンを返す",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RagQueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ストリーミング回答",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/RagStreamChunk"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/upload": {
+      "post": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "ドキュメントアップロード",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "アップロード成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "サポートされていないファイル形式",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "ドキュメント一覧",
+        "responses": {
+          "200": {
+            "description": "一覧取得成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "ドキュメントダウンロード",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ダウンロード成功",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ドキュメントが見つからない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "ドキュメント削除",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "削除成功"
+          },
+          "404": {
+            "description": "ドキュメントが見つからない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}/chunks": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "チャンク一覧",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "チャンク一覧",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChunkListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ドキュメントが見つからない",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "ヘルスチェック",
+        "responses": {
+          "200": {
+            "description": "ヘルスチェック成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@home-repo/swagger",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "generate": "tsx src/generate.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.0",
+    "@asteasolutions/zod-to-openapi": "^7.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

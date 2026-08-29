@@ -25,7 +25,8 @@ TypeScript レイヤードアーキテクチャによる RAG (Retrieval-Augmente
 | Test Runner | Vitest | ユニット / インテグレーション |
 | Linter | ESLint + @typescript-eslint | |
 | Type Check | TypeScript (`tsc --noEmit`) | strict mode |
-| API Docs | @nestjs/swagger + Swagger UI | OpenAPI 3.0 自動生成 |
+| Validation | Zod + nestjs-zod | スキーマ駆動のバリデーション |
+| API Docs | apps/swagger (zod-to-openapi) | OpenAPI 3.1 自動生成 |
 
 ---
 

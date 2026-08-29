@@ -8,9 +8,11 @@
     "experimentalDecorators": true,
     "declaration": false,
     "declarationMap": false,
+    "strictPropertyInitialization": false,
     "paths": {
-      "@home-repo/shared": ["../../packages/shared/src"]
+      "@home-repo/shared": ["../../packages/shared/src"],
+      "@home-repo/swagger": ["../../apps/swagger/src"]
     }
   },
-  "include": ["src", "../../packages/shared/src"]
+  "include": ["src", "../../packages/shared/src", "../../apps/swagger/src"]
 }

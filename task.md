@@ -77,18 +77,17 @@
 
 **目的**: HTTP リクエスト/レスポンスの処理 + Swagger ドキュメント
 
-- [ ] T6.1: DTO 定義 + `class-validator` / `class-transformer` 装飾子 + `@ApiProperty`
-  - `dto/query-rag.dto.ts`
-  - `dto/upload-document.dto.ts`
-  - `dto/document-response.dto.ts`
-  - `dto/chunk-response.dto.ts`
-- [ ] T6.2: `RagController` — `/rag/query`, `/rag/stream`
-- [ ] T6.3: `DocumentController` — `/documents` CRUD + `/documents/:id/chunks`
-- [ ] T6.4: `HealthController` — `/health`
-- [ ] T6.5: Swagger セットアップ (`@nestjs/swagger` + `SwaggerModule`)
-  - `main.ts` で `SwaggerModule.setup('/api/docs', app, document)` を設定
-  - タグ: `RAG`, `Documents`, `Health`
-- [ ] T6.6: Presentation モジュール (`presentation.module.ts`)
+- [x] T6.1: DTO 定義 (Zod スキーマ + nestjs-zod)
+  - `apps/swagger/src/schemas.ts` — API 契約定義（Zod スキーマ）
+  - `apps/swagger/src/registry.ts` — OpenAPI エンドポイント定義
+  - `apps/api/src/presentation/dto/query-rag.dto.ts` — Zod → NestJS DTO
+- [x] T6.2: `RagController` — `/rag/query`, `/rag/stream`
+- [x] T6.3: `DocumentController` — `/documents` CRUD + `/documents/:id/chunks`
+- [x] T6.4: `HealthController` — `/health`
+- [x] T6.5: Swagger (`apps/swagger` ワークスペース)
+  - Zod スキーマから OpenAPI 3.1 スペックを自動生成
+  - `pnpm --filter swagger generate` で `openapi.json` を出力
+- [x] T6.6: Presentation モジュール (`presentation.module.ts`)
 
 ---
 
