@@ -4,11 +4,13 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./src",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "paths": {
+      "@home-repo/shared": ["../../packages/shared/src"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../../packages/shared/src"]
 }

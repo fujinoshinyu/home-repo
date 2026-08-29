@@ -105,12 +105,12 @@
 
 **目的**: 認証・認可・レート制限・プロキシ
 
-- [ ] T8.1: Basic Auth Guard (`auth/basic-auth.guard.ts`)
-- [ ] T8.2: JWT Guard (`auth/jwt.guard.ts`)
-- [ ] T8.3: Rate Limiting (`rate-limit/`) — `@nestjs/throttler` 設定
-- [ ] T8.4: Proxy (`proxy/`) — api へのリバースプロキシ
-- [ ] T8.5: `app.module.ts`, `main.ts`
-- [ ] T8.6: `Dockerfile` 作成
+- [x] T8.1: Basic Auth Guard (`auth/basic-auth.guard.ts`)
+- [x] T8.2: JWT Guard (`auth/jwt.guard.ts`)
+- [x] T8.3: Rate Limiting (`rate-limit/`) — `@nestjs/throttler` 設定
+- [x] T8.4: Proxy (`proxy/`) — api へのリバースプロキシ
+- [x] T8.5: `app.module.ts`, `main.ts`
+- [x] T8.6: `Dockerfile` 作成
 
 ---
 
