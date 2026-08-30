@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DocumentUploadUseCase } from '../document-upload.usecase';
+import { DocumentQueryUseCase } from '../document-query.usecase';
 import { UploadJobService } from '../../services/upload-job.service';
 import type { EmbeddingCommand, VectorStoreCommand, DocumentCommand } from '../../../domain/ports';
 
@@ -9,6 +10,7 @@ describe('DocumentUploadUseCase', () => {
   let mockVectorStoreCommand: VectorStoreCommand;
   let mockLoaders: DocumentCommand[];
   let jobService: UploadJobService;
+  let documentQueryUseCase: DocumentQueryUseCase;
 
   beforeEach(() => {
     mockEmbedding = {
@@ -30,8 +32,9 @@ describe('DocumentUploadUseCase', () => {
       },
     ];
     jobService = new UploadJobService();
+    documentQueryUseCase = new DocumentQueryUseCase();
 
-    useCase = new DocumentUploadUseCase(mockEmbedding, mockVectorStoreCommand, mockLoaders, jobService);
+    useCase = new DocumentUploadUseCase(mockEmbedding, mockVectorStoreCommand, mockLoaders, jobService, documentQueryUseCase);
   });
 
   it('should create job and process upload in background', async () => {
@@ -53,6 +56,11 @@ describe('DocumentUploadUseCase', () => {
     expect(job.document?.chunkCount).toBe(2);
     expect(mockEmbedding.embedBatch).toHaveBeenCalledWith(['chunk 1 content', 'chunk 2 content']);
     expect(mockVectorStoreCommand.upsert).toHaveBeenCalledTimes(2);
+
+    // Verify document is registered in query use case
+    const docs = await documentQueryUseCase.list();
+    expect(docs).toHaveLength(1);
+    expect(docs[0].filename).toBe('test.md');
   });
 
   it('should throw BadRequestException for unsupported mime type', () => {

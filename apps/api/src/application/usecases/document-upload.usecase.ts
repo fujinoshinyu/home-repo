@@ -13,6 +13,7 @@ import {
 } from '../../infrastructure/infrastructure.module';
 import { SUPPORTED_MIME_TYPES } from '@home-repo/shared';
 import { UploadJobService } from '../services/upload-job.service';
+import { DocumentQueryUseCase } from './document-query.usecase';
 
 @Injectable()
 export class DocumentUploadUseCase {
@@ -24,6 +25,7 @@ export class DocumentUploadUseCase {
     @Inject(DOCUMENT_COMMANDS)
     private readonly loaders: DocumentCommand[],
     private readonly uploadJobService: UploadJobService,
+    private readonly documentQueryUseCase: DocumentQueryUseCase,
   ) {}
 
   createJob(file: Buffer, filename: string, mimeType: string): string {
@@ -71,6 +73,8 @@ export class DocumentUploadUseCase {
     }
 
     const doc = Document.create({ id: docId, filename, mimeType, size: file.length });
-    this.uploadJobService.markCompleted(jobId, doc.withChunkCount(chunks.length));
+    const docWithChunks = doc.withChunkCount(chunks.length);
+    this.documentQueryUseCase.registerDocument(docWithChunks);
+    this.uploadJobService.markCompleted(jobId, docWithChunks);
   }
 }

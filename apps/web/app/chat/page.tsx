@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { streamRag } from '@/features/chat/endpoints/chat-api';
+import { PageContainer, PageHeader, Card, CardHeader, CardBody, Button, EmptyState } from '../components/ui';
 
 export default function ChatPage() {
   const [question, setQuestion] = useState('');
@@ -34,47 +35,65 @@ export default function ChatPage() {
   }
 
   return (
-    <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
-      <h1>RAG Chat</h1>
+    <PageContainer>
+      <PageHeader title="チャット" subtitle="ドキュメントの内容をもとに AI が回答します" />
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-        <textarea
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="質問を入力してください..."
-          rows={3}
-          style={{ width: '100%', padding: 12, fontSize: 16 }}
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !question.trim()}
-          style={{ marginTop: 8, padding: '8px 24px', fontSize: 16 }}
-        >
-          {isLoading ? '回答中...' : '送信'}
-        </button>
-      </form>
+      <Card style={{ marginBottom: 24 }}>
+        <form onSubmit={handleSubmit}>
+          <CardBody>
+            <textarea
+              className="textarea"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="質問を入力してください..."
+              rows={3}
+              style={{ marginBottom: 12 }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button type="submit" loading={isLoading} disabled={!question.trim()}>
+                {isLoading ? '回答中...' : '送信'}
+              </Button>
+            </div>
+          </CardBody>
+        </form>
+      </Card>
 
       {answer && (
-        <section style={{ marginBottom: 24 }}>
-          <h2>回答</h2>
-          <div style={{ whiteSpace: 'pre-wrap', padding: 16, background: '#f5f5f5', borderRadius: 8 }}>
-            {answer}
-          </div>
-        </section>
+        <Card style={{ marginBottom: 24 }}>
+          <CardHeader>回答</CardHeader>
+          <CardBody>
+            <div className="chat-answer">{answer}</div>
+          </CardBody>
+        </Card>
       )}
 
       {sources.length > 0 && (
-        <section>
-          <h2>参照元</h2>
-          <ul>
-            {sources.map((s) => (
-              <li key={s.id}>
-                {s.source} (score: {s.score.toFixed(4)})
-              </li>
-            ))}
-          </ul>
-        </section>
+        <Card>
+          <CardHeader>参照元 ({sources.length}件)</CardHeader>
+          <CardBody>
+            <ul className="source-list">
+              {sources.map((s) => (
+                <li key={s.id} className="source-item">
+                  <span className="source-name">{s.source}</span>
+                  <span className="source-score">{s.score.toFixed(4)}</span>
+                </li>
+              ))}
+            </ul>
+          </CardBody>
+        </Card>
       )}
-    </main>
+
+      {!answer && !isLoading && (
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          }
+          title="質問を入力して送信してください"
+          description="登録済みドキュメントから関連情報を検索して回答します"
+        />
+      )}
+    </PageContainer>
   );
 }

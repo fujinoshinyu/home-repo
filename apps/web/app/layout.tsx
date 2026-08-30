@@ -1,13 +1,21 @@
+import type { Metadata } from 'next';
+import { Header } from './components/header';
+import { Providers } from './components/providers';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'RAG System',
+  description: '自作 RAG システムの管理画面',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
-      <body style={{ margin: 0, fontFamily: 'sans-serif' }}>
-        <nav style={{ padding: '12px 24px', borderBottom: '1px solid #ddd', display: 'flex', gap: 16 }}>
-          <a href="/">Home</a>
-          <a href="/chat">Chat</a>
-          <a href="/documents">Documents</a>
-        </nav>
-        {children}
+      <body>
+        <Providers>
+          <Header />
+          {children}
+        </Providers>
       </body>
     </html>
   );
