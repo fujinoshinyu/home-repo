@@ -161,3 +161,61 @@ T1 (基盤) → T2 (shared) → T3 (domain) → T4 (infrastructure)
 
 T1〜T7 は API 側の縦切りで進め、T8 (gateway), T9 (frontend) は API が動いてから並行可能。
 T10 は各タスクと並行して進めるが、全層完成後にカバレッジ確認を実施。
+
+---
+
+## 残タスク・既知の問題
+
+### 1. ドキュメントアップロードの504エラー
+- 状態: `/documents/upload` エンドポイントにファイルをアップロードすると504 Gateway Timeoutが発生する
+- 原因推測: Gateway のプロキシが multipart/form-data を正しく転送できていない、または LanceDB へのベクトル格納処理がタイムアウトしている
+- 対応: Gateway の multipart 処理確認、タイムアウト設定の見直し
+
+### 2. Gateway の認証フロー見直し
+- 現状: 全リクエストに対して Basic Auth が必須（毎回ヘッダーに credentials が必要）
+- 望ましい形: ログインフォームで認証を行い、認証済みセッションを確立。その後のHTTP通信では Gateway を経由する必要なし。タイムアウトは Next.js 側の挙動に任せる。ログインフォームに戻す。
+- 対応: ログインエンドポイントの追加、セッション管理（JWT）、Next.js の middleware で認証チェック
+
+### 3. LLM プロバイダの外部API対応（スパイク）
+- 現状: Ollama ローカルモデル（llama3.2, nomic-embed-text）で動作確認済みだが、CPU 推論で約15-20秒と遅い
+- 検討対象:
+  - OpenAI Responses API（GPT-4o等）
+  - Xiaomi MiMo Pro 2.5（現在 Cline で使用中）
+  - 他の外部API
+- 対応: `GenerationPort` の新しい Adapter 実装（OpenAIAdapter, MiMoAdapter等）、env変数でプロバイダ切替、Embedding は外部API対応 or ローカル維持
+
+---
+
+## T10以降の問題と解決方法のまとめ
+
+### 問題1: Docker ビルドで nest build が出力先を見失う
+- 原因: monorepo で nest build を実行すると tsconfig の paths 設定により出力が `/app/dist/apps/api/src/` になる
+- 解決: Dockerfile の COPY パスを実際の出力先に合わせた
+
+### 問題2: pnpm のシンボリックリンクが Docker 内で壊れる
+- 原因: pnpm は node_modules/.pnpm へのシンボリックリンクを使用。Docker 内でリンク先が存在しない
+- 解決: deps ステージの node_modules をそのまま runtime ステージにコピーし .pnpm ディレクトリも含める形に変更
+
+### 問題3: TypeScript のパスエイリアスがビルド後に解決されない
+- 原因: @home-repo/swagger, @home-repo/shared のパスエイリアスがビルド後も require('../../swagger/src') のまま残る
+- 解決: shared/swagger パッケージをビルド可能にしビルド済み dist を参照。runtime ステージにシンボリックリンクで node_modules/@home-repo/ を作成
+
+### 問題4: shared パッケージのビルドが ESM ディレクトリインポートエラー
+- 原因: tsconfig が module ESNext + moduleResolution bundler でビルド後の export * from './types' がディレクトリインポートとして拒否される
+- 解決: shared の tsconfig を module commonjs + moduleResolution node に変更
+
+### 問題5: Next.js ビルドで Html エラー
+- 原因: App Router で next.config と app/error.tsx が未定義のため Pages Router の /500 ページ自動生成で Html import エラー
+- 解決: next.config.ts と app/error.tsx を作成、NODE_ENV=production に変更
+
+### 問題6: Zod バリデーションで question が undefined
+- 原因: 標準の ValidationPipe は class-validator 用で nestjs-zod の createZodDto と互換性がない
+- 解決: ZodValidationPipe に変更
+
+### 問題7: Gateway プロキシでパスが / に変換される
+- 原因: NestJS のミドルウェアで req.url が / に変更される
+- 解決: req.url = req.originalUrl で元のパスを復元
+
+### 問題8: Gateway プロキシで POST ボディが転送されない
+- 原因: NestJS の bodyParser がリクエストボディを先に処理しプロキシにボディが届かない
+- 解決: rawBody true オプションと fixRequestBody ヘルパーで修正
