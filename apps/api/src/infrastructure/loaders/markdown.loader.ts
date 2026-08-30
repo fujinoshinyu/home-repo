@@ -64,6 +64,7 @@ export class MarkdownLoader implements DocumentCommand {
     while (start < text.length) {
       const end = Math.min(start + maxSize, text.length);
       chunks.push(text.slice(start, end));
+      if (end === text.length) break;
       start = end - overlap;
     }
 

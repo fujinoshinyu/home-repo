@@ -15,6 +15,8 @@ export class ApiProxyMiddleware implements NestMiddleware {
     this.proxy = createProxyMiddleware({
       target: apiUrl,
       changeOrigin: true,
+      proxyTimeout: 300_000,
+      timeout: 300_000,
       on: {
         proxyReq: fixRequestBody,
       },

@@ -107,6 +107,15 @@ export function createBinaryClient(baseUrl: string) {
     async download(path: string): Promise<Blob> { ... },
   };
 }
+
+// 非同期アップロード（RAGドキュメント登録用）
+// POSTでファイル送信 → jobId即座に返却 → ポーリングで完了待ち
+// Gateway proxyの120秒タイムアウトを回避するため、同期uploadを非同期ジョブに分割
+export function createAsyncUploadClient(baseUrl: string) {
+  return {
+    async upload<T>(path: string, file: File | Blob, metadata?: Record<string, string>): Promise<T> { ... },
+  };
+}
 ```
 
 ### 4.2 Usage (各 endpoint ディレクトリ)
@@ -122,30 +131,44 @@ export async function queryRag(question: string) {
 }
 
 // apps/web/features/documents/endpoints/document-api.ts
-import { createBinaryClient } from '@/lib/api/factory';
+import { createJsonClient, createBinaryClient } from '@/lib/api/factory';
 
+const jsonClient = createJsonClient(process.env.NEXT_PUBLIC_API_URL!);
 const binaryClient = createBinaryClient(process.env.NEXT_PUBLIC_API_URL!);
 
+export async function listDocuments() { return jsonClient.get('/documents'); }
+export async function deleteDocument(id: string) { return jsonClient.delete(`/documents/${id}`); }
+export async function downloadDocument(id: string) { return binaryClient.download(`/documents/${id}`); }
+
+// apps/web/features/documents/endpoints/document-upload-api.ts
+// RAGドキュメント登録は非同期ジョブ。embedding処理がGateway proxyの120秒タイムアウトを超えるため、
+// ファイル受付とジョブ処理を分離し、ポーリングで完了を待つ。
+import { createAsyncUploadClient, createJsonClient } from '@/lib/api/factory';
+
+const asyncClient = createAsyncUploadClient(process.env.NEXT_PUBLIC_API_URL!);
+const jsonClient = createJsonClient(process.env.NEXT_PUBLIC_API_URL!);
+
 export async function uploadDocument(file: File) {
-  return binaryClient.upload('/documents/upload', file);
+  return asyncClient.upload<DocumentResponse>('/documents/upload', file);
 }
 
-export async function downloadDocument(id: string) {
-  return binaryClient.download(`/documents/${id}`);
+export async function getUploadJob(jobId: string) {
+  return jsonClient.get<UploadJobResponse>(`/documents/jobs/${jobId}`);
 }
 ```
 
 ### 4.3 Content-Type Routing
 
-| Route | Method | Content-Type | Client |
-|---|---|---|---|
-| `/rag/query` | POST | `application/json` | json-client |
-| `/rag/stream` | POST | `application/json` → `ReadableStream` (NDJSON) | json-client (stream via fetch) |
-| `/documents/upload` | POST | `multipart/form-data` | binary-client |
-| `/documents/:id` | GET | `application/octet-stream` | binary-client |
-| `/documents` | GET | `application/json` | json-client |
-| `/documents/:id` | DELETE | `application/json` | json-client |
-| `/documents/:id/chunks` | GET | `application/json` | json-client |
+| Route | Method | Content-Type | Client | 処理形態 |
+|---|---|---|---|---|
+| `/rag/query` | POST | `application/json` | json-client | 同期 |
+| `/rag/stream` | POST | `application/json` → `ReadableStream` (NDJSON) | json-client (stream via fetch) | ストリーミング |
+| `/documents/upload` | POST | `multipart/form-data` | async-upload-client | 非同期（jobId即時返却） |
+| `/documents/jobs/:id` | GET | `application/json` | json-client | 同期（ジョブ状態確認） |
+| `/documents/:id` | GET | `application/octet-stream` | binary-client | 同期 |
+| `/documents` | GET | `application/json` | json-client | 同期 |
+| `/documents/:id` | DELETE | `application/json` | json-client | 同期 |
+| `/documents/:id/chunks` | GET | `application/json` | json-client | 同期 |
 
 ---
 
@@ -217,13 +240,24 @@ export interface DocumentLoaderPort {
 
 ## 6. RAG Pipeline
 
-### 6.1 Ingestion Flow
+### 6.1 Ingestion Flow（非同期ジョブ）
+
+embedding処理はチャンク数×Ollama API呼び出しのため、Gateway proxyの120秒デフォルトタイムアウトを超える可能性がある。
+そのため、ファイル受付とembedding処理を非同期ジョブとして分離する。
 
 ```
-File Upload (multipart)
-  → DocumentLoaderPort.load()        # フォーマット別パース + チャンク分割
-  → EmbeddingPort.embedBatch()        # チャンクごとにベクトル化
-  → VectorStorePort.upsert()          # LanceDB に格納（ベクトル + メタデータ）
+【即座に返る】POST /documents/upload (multipart)
+  → ファイル受信 + チャンク分割
+  → ジョブ作成（status: "pending", totalChunks: N）
+  → jobId を即座に返却
+  → バックグラウンドで以下を実行:
+      → EmbeddingPort.embedBatch()     # チャンクごとにベクトル化（時間がかかる）
+      → VectorStorePort.upsert()       # LanceDB に格納
+      → ジョブステータス更新（status: "completed"）
+
+【ポーリング】GET /documents/jobs/:id
+  → { status, totalChunks, completedChunks, document? } を返却
+  → フロントは2秒間隔でポーリングし、完了を待つ
 ```
 
 ### 6.2 Query Flow
@@ -387,7 +421,8 @@ volumes:
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/documents/upload` | ドキュメントアップロード（multipart） |
+| POST | `/documents/upload` | ドキュメントアップロード（multipart）→ jobId 即時返却 |
+| GET | `/documents/jobs/:id` | アップロードジョブの状態確認（ポーリング用） |
 | GET | `/documents` | ドキュメント一覧 |
 | GET | `/documents/:id` | ドキュメントダウンロード（binary） |
 | DELETE | `/documents/:id` | ドキュメント削除 |

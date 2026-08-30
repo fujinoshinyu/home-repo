@@ -29,6 +29,13 @@ export class OllamaEmbeddingAdapter implements EmbeddingCommand {
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
-    return Promise.all(texts.map((text) => this.embed(text)));
+    const batchSize = 5;
+    const results: number[][] = [];
+    for (let i = 0; i < texts.length; i += batchSize) {
+      const batch = texts.slice(i, i + batchSize);
+      const batchResults = await Promise.all(batch.map((text) => this.embed(text)));
+      results.push(...batchResults);
+    }
+    return results;
   }
 }

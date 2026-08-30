@@ -82,3 +82,58 @@ export function createBinaryClient(baseUrl: string = API_URL) {
     },
   };
 }
+
+// --- Async Upload Client ---
+// POSTでファイル送信 → jobId即座に返却 → ポーリングで完了待ち
+// Gateway proxyの120秒タイムアウトを回避するため、同期uploadを非同期ジョブに分割
+
+export interface AsyncUploadOptions {
+  pollIntervalMs?: number;
+  onProgress?: (completed: number, total: number) => void;
+}
+
+export function createAsyncUploadClient(baseUrl: string = API_URL) {
+  const jsonClient = createJsonClient(baseUrl);
+
+  return {
+    async upload<T>(
+      path: string,
+      file: File,
+      metadata?: Record<string, string>,
+      options?: AsyncUploadOptions,
+    ): Promise<T> {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (metadata) {
+        Object.entries(metadata).forEach(([k, v]) => formData.append(k, v));
+      }
+
+      const uploadRes = await fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!uploadRes.ok) throw new Error(`Upload ${path} failed: ${uploadRes.status}`);
+      const { jobId } = (await uploadRes.json()) as { jobId: string };
+
+      const pollInterval = options?.pollIntervalMs ?? 2000;
+      const jobsPath = path.replace('/upload', `/jobs/${jobId}`);
+
+      while (true) {
+        await new Promise((r) => setTimeout(r, pollInterval));
+        const job = await jsonClient.get<{
+          id: string;
+          status: string;
+          totalChunks: number;
+          completedChunks: number;
+          document: T | null;
+          error: string | null;
+        }>(jobsPath);
+
+        options?.onProgress?.(job.completedChunks, job.totalChunks);
+
+        if (job.status === 'completed') return job.document!;
+        if (job.status === 'failed') throw new Error(job.error ?? 'Upload processing failed');
+      }
+    },
+  };
+}

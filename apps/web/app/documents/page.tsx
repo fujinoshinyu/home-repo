@@ -3,15 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   listDocuments,
-  uploadDocument,
   deleteDocument,
   type DocumentResponse,
 } from '@/features/documents/endpoints/document-api';
+import { uploadDocument } from '@/features/documents/endpoints/document-upload-api';
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +40,13 @@ export default function DocumentsPage() {
     if (!selectedFile) return;
 
     setIsUploading(true);
+    setUploadProgress(null);
     try {
-      await uploadDocument(selectedFile);
+      await uploadDocument(selectedFile, {
+        onProgress: (completed, total) => {
+          setUploadProgress({ completed, total });
+        },
+      });
       await fetchDocuments();
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -48,6 +54,7 @@ export default function DocumentsPage() {
       console.error('Upload failed:', err);
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
     }
   }
 
@@ -82,9 +89,15 @@ export default function DocumentsPage() {
         </button>
       </div>
 
-      {selectedFile && (
+      {selectedFile && !isUploading && (
         <p style={{ marginBottom: 16, color: '#666' }}>
           選択中: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+        </p>
+      )}
+
+      {uploadProgress && (
+        <p style={{ marginBottom: 16, color: '#0066cc' }}>
+          embedding処理中... {uploadProgress.completed} / {uploadProgress.total} チャンク完了
         </p>
       )}
 

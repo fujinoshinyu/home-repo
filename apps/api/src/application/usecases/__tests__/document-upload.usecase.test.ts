@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DocumentUploadUseCase } from '../document-upload.usecase';
+import { UploadJobService } from '../../services/upload-job.service';
 import type { EmbeddingCommand, VectorStoreCommand, DocumentCommand } from '../../../domain/ports';
 
 describe('DocumentUploadUseCase', () => {
@@ -7,6 +8,7 @@ describe('DocumentUploadUseCase', () => {
   let mockEmbedding: EmbeddingCommand;
   let mockVectorStoreCommand: VectorStoreCommand;
   let mockLoaders: DocumentCommand[];
+  let jobService: UploadJobService;
 
   beforeEach(() => {
     mockEmbedding = {
@@ -27,25 +29,35 @@ describe('DocumentUploadUseCase', () => {
         ]),
       },
     ];
+    jobService = new UploadJobService();
 
-    useCase = new DocumentUploadUseCase(mockEmbedding, mockVectorStoreCommand, mockLoaders);
+    useCase = new DocumentUploadUseCase(mockEmbedding, mockVectorStoreCommand, mockLoaders, jobService);
   });
 
-  it('should upload document: parse → embed → store', async () => {
+  it('should create job and process upload in background', async () => {
     const file = Buffer.from('# Test\nHello world');
-    const result = await useCase.execute(file, 'test.md', 'text/markdown');
+    const jobId = useCase.createJob(file, 'test.md', 'text/markdown');
 
-    expect(result.filename).toBe('test.md');
-    expect(result.mimeType).toBe('text/markdown');
-    expect(result.chunkCount).toBe(2);
+    expect(jobId).toBeTruthy();
+    expect(jobService.get(jobId)).toBeTruthy();
+
+    // Wait for background processing
+    await vi.waitFor(() => {
+      const job = jobService.get(jobId);
+      expect(job?.status).toBe('completed');
+    });
+
+    const job = jobService.get(jobId)!;
+    expect(job.document?.filename).toBe('test.md');
+    expect(job.document?.mimeType).toBe('text/markdown');
+    expect(job.document?.chunkCount).toBe(2);
     expect(mockEmbedding.embedBatch).toHaveBeenCalledWith(['chunk 1 content', 'chunk 2 content']);
     expect(mockVectorStoreCommand.upsert).toHaveBeenCalledTimes(2);
   });
 
-  it('should throw BadRequestException for unsupported mime type', async () => {
+  it('should throw BadRequestException for unsupported mime type', () => {
     const file = Buffer.from('test');
-
-    await expect(useCase.execute(file, 'test.exe', 'application/exe')).rejects.toThrow(
+    expect(() => useCase.createJob(file, 'test.exe', 'application/exe')).toThrow(
       'Unsupported file type',
     );
   });

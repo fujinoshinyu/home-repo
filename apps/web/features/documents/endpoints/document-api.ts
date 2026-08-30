@@ -18,11 +18,6 @@ export interface DocumentListResponse {
   total: number;
 }
 
-export async function uploadDocument(file: File): Promise<DocumentResponse> {
-  const res = await binaryClient.upload('/documents/upload', file);
-  return res.json();
-}
-
 export async function listDocuments(): Promise<DocumentListResponse> {
   return jsonClient.get<DocumentListResponse>('/documents');
 }

@@ -14,7 +14,7 @@ export class LanceVectorStoreCommandAdapter implements VectorStoreCommand {
       metadata: JSON.stringify(metadata),
     };
 
-    await this.connection.table.add([record], { mode: 'overwrite' });
+    await this.connection.table.add([record], { mode: 'append' });
   }
 
   async delete(id: string): Promise<void> {
