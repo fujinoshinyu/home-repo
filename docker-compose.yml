@@ -9,8 +9,8 @@ services:
 
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     ports:
       - "3001:3001"
     depends_on:
@@ -21,13 +21,12 @@ services:
       - NODE_ENV=development
     volumes:
       - lance-data:/data/lancedb
-      - ./apps/api/src:/app/src
     restart: unless-stopped
 
   gateway:
     build:
-      context: ./apps/gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/gateway/Dockerfile
     ports:
       - "3000:3000"
     depends_on:
@@ -42,17 +41,14 @@ services:
 
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web/Dockerfile
     ports:
       - "3002:3002"
     depends_on:
       - gateway
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3000
-    volumes:
-      - ./apps/web/src:/app/src
-      - ./apps/web/app:/app/app
     restart: unless-stopped
 
 volumes:

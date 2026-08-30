@@ -9,8 +9,8 @@
     "declaration": false,
     "declarationMap": false,
     "paths": {
-      "@home-repo/shared": ["../../packages/shared/src"]
+      "@home-repo/shared": ["../../packages/shared/dist"]
     }
   },
-  "include": ["src", "../../packages/shared/src"]
+  "include": ["src"]
 }

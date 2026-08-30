@@ -17,6 +17,7 @@
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/throttler": "^6.0.0",
+    "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^4.2.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0"
@@ -27,6 +28,7 @@
     "@nestjs/testing": "^11.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
+    "tsc-alias": "^1.9.2",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }

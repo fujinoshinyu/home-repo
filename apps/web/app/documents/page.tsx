@@ -12,6 +12,7 @@ export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchDocuments() {
@@ -29,14 +30,19 @@ export default function DocumentsPage() {
     fetchDocuments();
   }, []);
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null;
+    setSelectedFile(file);
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) return;
 
     setIsUploading(true);
     try {
-      await uploadDocument(file);
+      await uploadDocument(selectedFile);
       await fetchDocuments();
+      setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error('Upload failed:', err);
@@ -59,16 +65,28 @@ export default function DocumentsPage() {
     <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
       <h1>ドキュメント管理</h1>
 
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
         <input
           ref={fileInputRef}
           type="file"
-          onChange={handleUpload}
+          onChange={handleFileSelect}
           disabled={isUploading}
           accept=".md,.txt,.pdf,.json,.png,.jpg,.jpeg,.webp"
         />
-        {isUploading && <span> アップロード中...</span>}
+        <button
+          onClick={handleUpload}
+          disabled={!selectedFile || isUploading}
+          style={{ padding: '8px 16px' }}
+        >
+          {isUploading ? '登録中...' : '登録'}
+        </button>
       </div>
+
+      {selectedFile && (
+        <p style={{ marginBottom: 16, color: '#666' }}>
+          選択中: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+        </p>
+      )}
 
       {isLoading ? (
         <p>読み込み中...</p>

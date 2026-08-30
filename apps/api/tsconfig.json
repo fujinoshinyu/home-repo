@@ -10,9 +10,9 @@
     "declarationMap": false,
     "strictPropertyInitialization": false,
     "paths": {
-      "@home-repo/shared": ["../../packages/shared/src"],
-      "@home-repo/swagger": ["../../apps/swagger/src"]
+      "@home-repo/shared": ["../../packages/shared/dist"],
+      "@home-repo/swagger": ["../../apps/swagger/dist"]
     }
   },
-  "include": ["src", "../../packages/shared/src", "../../apps/swagger/src"]
+  "include": ["src", "../../packages/shared/src"]
 }

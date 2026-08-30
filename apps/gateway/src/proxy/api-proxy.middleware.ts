@@ -1,20 +1,28 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createProxyMiddleware, RequestHandler } from 'http-proxy-middleware';
+import { Request, Response } from 'express';
+import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 
 @Injectable()
 export class ApiProxyMiddleware implements NestMiddleware {
-  private proxy: RequestHandler;
+  private readonly logger = new Logger(ApiProxyMiddleware.name);
+  private proxy;
 
   constructor(private readonly configService: ConfigService) {
     const apiUrl = this.configService.get<string>('API_URL', 'http://localhost:3001');
+    this.logger.log(`Proxy target: ${apiUrl}`);
+
     this.proxy = createProxyMiddleware({
       target: apiUrl,
       changeOrigin: true,
+      on: {
+        proxyReq: fixRequestBody,
+      },
     });
   }
 
-  use(req: unknown, res: unknown, next: () => void) {
-    (this.proxy as (req: unknown, res: unknown, next: () => void) => void)(req, res, next);
+  use(req: Request, res: Response, next: () => void) {
+    req.url = req.originalUrl;
+    this.proxy(req, res, next);
   }
 }

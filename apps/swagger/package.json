@@ -2,7 +2,10 @@
   "name": "@home-repo/swagger",
   "version": "0.1.0",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "generate": "tsx src/generate.ts",
     "typecheck": "tsc --noEmit"
   },
