@@ -1,2 +1,2 @@
-# home-repo
-# RAG構築　test
+# home-repo(monorepo構成)
+# RAGの段階的構築検証
